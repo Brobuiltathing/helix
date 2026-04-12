@@ -1,130 +1,41 @@
 # HELIX
 
-**An open-source robotics engineering IDE with AI assistance.**
+**An open-source robotics IDE with a built-in AI that builds projects for you.**
 
-HELIX is a desktop-style IDE for designing robots end to end. Place real components on a schematic, wire them with click-to-click connections, generate Arduino/PlatformIO code, validate the design with built-in DRC, and let an AI assistant build entire robots for you. Supports local Ollama models so it runs fully offline if you want.
+HELIX is a full desktop-style engineering environment that runs in your browser. Place real components on a schematic canvas, wire them together with click-to-click connections, and let the AI handle the rest. Press `Ctrl+K`, describe what you want to build in plain English, and HELIX generates the schematic, routes the wires, and writes the firmware in one shot.
+
+It works fully offline with a local Ollama model. No accounts, no subscriptions, no cloud dependency.
 
 Built by [Amay Labs](https://github.com/amaylabs).
 
-![HELIX banner](https://via.placeholder.com/1200x400/07070b/00e5cc?text=HELIX+v4)
+---
+
+## What it does
+
+Most robotics tools make you do everything manually. HELIX is built around the idea that you should be able to say "build a line-following robot with PID control" and get a complete, wired schematic with working firmware in under ten seconds.
+
+That's the `Ctrl+K` flow. It's like Cursor, but for hardware.
+
+Beyond the AI, HELIX is a complete engineering workbench:
+
+- A schematic editor with 117+ real components and accurate pinouts
+- A PCB layout view that generates automatically from your schematic
+- A VS Code-style code editor with multi-file support
+- A Design Rule Check that validates your circuit and flags real problems
+- Export to SVG, PNG, PDF, Gerber JSON, and BOM CSV
+
+Everything runs in the browser. There is no backend.
 
 ---
 
-## Features
-
-### 117+ component library
-Real parts with accurate pinouts, voltage ratings, and footprints across 17 categories:
-
-**Robotics**
-- **Microcontrollers**: ESP32, RPi Pico, Teensy 4.1, Arduino Mega, Pixhawk 6C
-- **Motors**: BLDC, DC gear, NEMA steppers
-- **Servos**: SG90, MG996R, DS3218, Dynamixel
-- **Motor Drivers**: L298N, TB6612, A4988, DRV8825, ESC, ODrive, PCA9685
-- **IMU/Nav**: MPU6050/9250, BNO055, ICM20948, GPS, RTK
-- **LiDAR/Distance**: HC-SR04, VL53L0X, TFMini, RPLiDAR
-- **Vision**: ESP32-CAM, OpenMV, Pixy2, OAK-D
-- **Communication**: nRF24, LoRa, CAN, RS485, RC receivers
-- **Power**: LiPo 3S/4S, BECs, buck converters, PDBs
-
-**Prototyping & general electronics**
-- **Prototyping**: full + mini breadboards, perfboard, jumper kits, terminal blocks, headers (M/F), JST-XH, Dupont
-- **Passives**: resistors (THT + SMD), capacitors (ceramic + electrolytic), inductors, diodes (signal/power/zener), LEDs, RGB LEDs, potentiometers, push buttons, switches
-- **ICs**: NE555 timer, LM358 op-amp, 74HC595 shift register, MOSFETs, optocouplers
-- **Audio**: passive/active buzzers, DFPlayer Mini MP3, MAX9814 mic
-- **Modules**: SD card, DS3231 RTC, EEPROM, 1ch/4ch relays, level shifters
-- **Sensors**: DHT22/DHT11, BME280, LDR, soil moisture, flame, MQ-2 gas, water level
-- **Displays**: I2C/SPI OLED, LCD1602, ST7735 TFT, WS2812 NeoPixel
-
-### AI assistant with full IDE control
-Press **Ctrl+K** (or Cmd+K) anywhere in HELIX to open an inline AI prompt — like Cursor. Type what you want to build and the AI executes it directly: places components, wires them, generates code, opens the right view, all in one shot. The Cmd+K mode forces strict action-block output and auto-retries if the AI hedges with prose.
-
-You can also use the chat panel on the right for back-and-forth conversation.
-
-The AI controls every part of the IDE through 18 action types:
-
-**Schematic actions**
-- `add_component`, `wire`, `delete_component`, `delete_wire`
-- `move_component`, `rotate_component`, `clear_schematic`, `clear_wires`
-
-**File & code actions**
-- `set_code`, `append_code` (with optional `file` parameter)
-- `create_file`, `delete_file`, `set_active_file`
-
-**Project actions**
-- `set_board`, `open_view`, `compile`, `serial_print`
-
-**Communication**
-- `message`, `note`
-
-This means the AI can build a project end-to-end: place components, wire them, create multiple source files (config.h + main.ino + drivers.h), open the right view, and explain what it built — all in one response.
-
-### Auto-fix and JSON repair
-HELIX validates every AI response before executing it:
-- **JSON repair**: fixes trailing commas, stray quotes after numbers, smart quotes
-- **Pin validation**: drops wires referencing pins that don't exist on a component
-- **Motor driver enforcement**: if the AI wires DC motors directly to MCU pins, HELIX automatically inserts an L298N driver and reroutes all the bad wires through it
-- **Common ground auto-wiring**: ensures battery and MCU grounds are tied together
-
-You see all auto-fixes in the chat as a green "exec" message — no silent rewrites.
-
-Three AI providers supported:
-- **Ollama** (local, free, private)
-- **Anthropic Claude**
-- **OpenAI GPT-4o**
-
-### Schematic editor
-- Click-to-click pin wiring with color-coded nets
-- Pan and zoom (mouse wheel + drag empty area)
-- Drag components to reposition
-- Rotate components (R key)
-- Delete with Del key
-- Undo/redo with 50-state history
-- Auto-saves to localStorage
-
-### PCB view
-Auto-generated PCB layout from your schematic, with copper traces and pad rendering. Export to SVG, PNG, PDF, or Gerber JSON.
-
-### Design Rule Check (DRC)
-Validates your circuit and flags problems as warnings:
-- Unconnected pins
-- Voltage mismatches between 3.3V/5V components
-- Missing GND connections
-- Missing microcontroller
-- Motors driven without a motor driver
-
-### Code editor (VS Code-like)
-- Syntax highlighting for Arduino/C++
-- Tab/Shift+Tab indent and unindent
-- Auto-indent on Enter (matches previous line, adds level after `{`)
-- Auto-close brackets and quotes
-- Smart backspace inside empty pairs
-- `Ctrl+/` toggle line comments
-- `Ctrl+D` duplicate line
-- Smart `Home` key (first non-whitespace, then column 0)
-- Multiple file tabs with new/rename/delete
-
-### Project templates
-Start fast with preset projects:
-- Line Following Robot
-- Quadcopter Drone
-- 6-DOF Robotic Arm
-- Blank
-
-### Export everything
-- Schematic: SVG, PNG, PDF, JSON
-- PCB: SVG, PNG, PDF, Gerber JSON
-- BOM: CSV
-- Full project: `.helix` file
-
----
-
-## Installation
+## Getting started
 
 ### Prerequisites
-- [Node.js](https://nodejs.org) 18 or newer
-- npm (comes with Node)
 
-### Setup
+- [Node.js](https://nodejs.org) v18 or newer
+- npm (ships with Node)
+
+### Install and run
 
 ```bash
 git clone https://github.com/amaylabs/helix.git
@@ -133,7 +44,7 @@ npm install
 npm run dev
 ```
 
-The app will open at `http://localhost:5173`.
+The app opens at `http://localhost:5173`.
 
 ### Build for production
 
@@ -142,78 +53,54 @@ npm run build
 npm run preview
 ```
 
-The built app goes into `dist/` and can be hosted on any static web server (Vercel, Netlify, GitHub Pages, your own server).
+The output goes into `dist/` as a fully static site. Deploy it anywhere: Vercel, Netlify, GitHub Pages, your own server.
 
 ---
 
-## Using AI assistance
+## AI assistant
 
-### Option 1: Ollama (recommended, free, local)
+The AI is the fastest way to use HELIX. It has full control over every part of the IDE and can build an entire project from a single sentence.
 
-1. Install [Ollama](https://ollama.com)
-2. Pull a model:
-   ```bash
-   ollama pull llama3
-   ```
-3. Make sure Ollama is running (it usually starts automatically)
-4. In HELIX, open Settings and select "Ollama (Local)"
-5. Set the model name to whatever you pulled (e.g. `llama3`, `qwen2.5-coder`, `deepseek-coder`)
+### Ctrl+K (inline builder)
 
-**Recommended models for robotics:**
-- `qwen2.5-coder:14b` (best for code generation)
-- `deepseek-coder:6.7b` (lightweight, fast)
-- `llama3.1:8b` (good general purpose)
+Press `Ctrl+K` or `Cmd+K` from anywhere in HELIX to open an inline prompt. Type what you want. The AI places components, wires them, creates firmware files, opens the right view, and reports back what it built.
 
-### Option 2: Anthropic Claude
+The Ctrl+K mode is purpose-built for this. It enforces strict action-block output from the model and auto-retries if the response comes back as prose instead of executable actions.
 
-1. Get an API key from [console.anthropic.com](https://console.anthropic.com)
-2. In HELIX, open Settings, select "Anthropic Claude", paste your key
+### Chat panel
 
-### Option 3: OpenAI
+For back-and-forth conversation, questions, or iterating on a design, use the chat panel on the right side of the screen.
 
-1. Get an API key from [platform.openai.com](https://platform.openai.com)
-2. In HELIX, open Settings, select "OpenAI GPT-4o", paste your key
+### What the AI can control
 
----
+The AI executes 18 action types that cover every part of the IDE:
 
-## Keyboard shortcuts
+**Schematic**
+- `add_component` -- place a component by ID at given coordinates
+- `wire` -- connect two pins by `componentID:pinLabel`
+- `delete_component`, `delete_wire`
+- `move_component`, `rotate_component`
+- `clear_schematic`, `clear_wires`
 
-### Project
-| Action | Shortcut |
-|--------|----------|
-| Save Project | `Ctrl+S` |
-| Undo | `Ctrl+Z` |
-| Redo | `Ctrl+Y` |
-| Toggle Sidebar | `Ctrl+B` |
-| Toggle AI Chat | `Ctrl+J` |
-| Show Help | `Ctrl+/` |
+**Code**
+- `set_code` -- replace the active file's contents
+- `append_code` -- add to the active file
+- `create_file`, `delete_file`, `set_active_file`
 
-### Code editor
-| Action | Shortcut |
-|--------|----------|
-| Indent / Tab | `Tab` |
-| Unindent | `Shift+Tab` |
-| Toggle line comment | `Ctrl+/` |
-| Duplicate line | `Ctrl+D` |
-| Smart home | `Home` |
-| Auto-close brackets/quotes | Type `(`, `[`, `{`, `"`, `'` |
-| Auto-indent | `Enter` after `{`, `[`, `(` |
+**Project**
+- `set_board` -- switch the active microcontroller board
+- `open_view` -- navigate to schematic, PCB, or code view
+- `compile`, `serial_print`
 
-### Schematic
-| Action | Shortcut |
-|--------|----------|
-| Delete Component | `Del` |
-| Rotate Component | `R` |
-| Cancel Wiring | `Esc` |
-| Wire Pins | Click pin, then click target pin |
-| Pan Schematic | Drag empty area |
-| Zoom Schematic | Mouse wheel |
+**Communication**
+- `message` -- send a chat message
+- `note` -- add an inline annotation
 
----
+A complete AI response can place components, wire them, create `config.h` and `main.ino` and `drivers.h`, switch to the code view, and write a summary explaining the build. All in one response.
 
-## How AI tool calling works
+### How the action format works
 
-When you ask HELIX AI to do something, it can respond with a JSON action block:
+When the AI responds, it wraps its instructions in a `helix-actions` block:
 
 ````
 ```helix-actions
@@ -224,94 +111,302 @@ When you ask HELIX AI to do something, it can respond with a JSON action block:
     { "type": "wire", "from": "mcu_esp32:D21", "to": "imu_mpu6050:SDA" },
     { "type": "wire", "from": "mcu_esp32:D22", "to": "imu_mpu6050:SCL" },
     { "type": "set_code", "code": "// Generated firmware here" },
-    { "type": "message", "text": "MPU6050 wired and code ready" }
+    { "type": "message", "text": "MPU6050 wired and firmware ready." }
   ]
 }
 ```
 ````
 
-HELIX parses these blocks and executes them automatically. The AI knows your active board, the components already placed, and your current code, so it can make context-aware decisions.
+HELIX parses the block and executes every action in sequence. The AI knows your active board, placed components, and current code, so it can make context-aware decisions without you repeating yourself.
 
-Action types:
-- `add_component`: places a part by ID at coordinates
-- `wire`: connects two pins by `componentID:pinLabel`
-- `set_code`: replaces the active file's contents
-- `append_code`: adds to the active file
-- `clear_schematic`: wipes the canvas
-- `message`: sends a chat message
+### Auto-fix and validation
+
+HELIX validates every AI response before running it. Problems are corrected automatically and reported in the chat as a green "exec" message. Nothing is silently rewritten.
+
+Auto-fixes include:
+
+- **JSON repair** -- trailing commas, stray quotes after numbers, smart quotes
+- **Pin validation** -- drops wires referencing pins that don't exist on a placed component
+- **Motor driver enforcement** -- if DC motors are wired directly to MCU GPIO pins, HELIX inserts an L298N driver automatically and reroutes the connections
+- **Common ground wiring** -- ensures battery and MCU grounds are tied together
+
+### AI providers
+
+| Provider | Cost | Privacy | Best for |
+|---|---|---|---|
+| Ollama (local) | Free | 100% local | Offline use, privacy, tinkering |
+| Anthropic Claude | ~$0.01-0.05 per build | Sent to Anthropic API | Best output quality |
+| OpenAI GPT-4o | ~$0.02-0.08 per build | Sent to OpenAI API | Already have a key |
+
+---
+
+## Setting up AI
+
+### Ollama (recommended for most people)
+
+Ollama runs models locally. No API key, no internet after the initial download.
+
+1. Install [Ollama](https://ollama.com)
+2. Pull a model:
+   ```bash
+   ollama pull qwen2.5-coder:14b
+   ```
+3. Start Ollama (it usually starts automatically after install)
+4. In HELIX, open Settings, select "Ollama (Local)", and set the model name
+
+Recommended models for robotics projects:
+
+| Model | Why |
+|---|---|
+| `qwen2.5-coder:14b` | Best code generation, top pick for HELIX |
+| `deepseek-coder:6.7b` | Lighter, faster on low-VRAM machines |
+| `llama3.1:8b` | Good general purpose fallback |
+
+### Anthropic Claude
+
+1. Get an API key from [console.anthropic.com](https://console.anthropic.com)
+2. In HELIX, open Settings, select "Anthropic Claude", and paste your key
+
+### OpenAI GPT-4o
+
+1. Get an API key from [platform.openai.com](https://platform.openai.com)
+2. In HELIX, open Settings, select "OpenAI GPT-4o", and paste your key
+
+---
+
+## Component library
+
+117+ real parts with accurate pinouts, voltage ratings, and footprints across 17 categories.
+
+### Microcontrollers and compute
+ESP32, Raspberry Pi Pico, Teensy 4.1, Arduino Mega, Pixhawk 6C
+
+### Motion
+- **Motors**: BLDC, DC gear, NEMA steppers
+- **Servos**: SG90, MG996R, DS3218, Dynamixel XL430
+- **Motor drivers**: L298N, TB6612, A4988, DRV8825, ESC, ODrive, PCA9685
+
+### Navigation and sensing
+- **IMU / Nav**: MPU6050, MPU9250, BNO055, ICM20948, GPS modules, RTK
+- **LiDAR / Distance**: HC-SR04 ultrasonic, VL53L0X ToF, TFMini, RPLiDAR A1
+- **Sensors**: DHT22/DHT11, BME280, LDR, soil moisture, flame, MQ-2 gas, water level
+
+### Vision
+ESP32-CAM, OpenMV, Pixy2, OAK-D Lite
+
+### Communication
+nRF24L01, LoRa SX1276, CAN transceiver, RS485, RC receivers
+
+### Power
+LiPo 3S/4S packs, BECs, buck converters, power distribution boards
+
+### Displays and outputs
+I2C OLED, SPI OLED, LCD1602, ST7735 TFT, WS2812 NeoPixel strips
+
+### Prototyping and passives
+Full and mini breadboards, perfboard, jumper kits, terminal blocks, headers (M/F), JST-XH, Dupont connectors, resistors (THT + SMD), capacitors (ceramic + electrolytic), inductors, diodes, LEDs, RGB LEDs, potentiometers, push buttons, switches
+
+### ICs and modules
+NE555, LM358, 74HC595, MOSFETs, optocouplers, SD card modules, DS3231 RTC, EEPROM, relay modules (1ch/4ch), level shifters
+
+### Audio
+Passive buzzer, active buzzer, DFPlayer Mini MP3, MAX9814 microphone
+
+---
+
+## Schematic editor
+
+The canvas is where you design circuits. Everything is click-based with no manual coordinate entry.
+
+- Click-to-click pin wiring with color-coded nets per signal type
+- Pan with click-drag on empty canvas area
+- Zoom with mouse wheel
+- Drag components to reposition
+- Rotate with `R`
+- Delete with `Del`
+- 50-state undo/redo history
+- Auto-saves to localStorage
+
+---
+
+## Design Rule Check
+
+The DRC runs against your schematic and surfaces real circuit problems as warnings. It checks for:
+
+- Unconnected pins
+- Voltage mismatches between 3.3V and 5V components
+- Missing GND connections
+- No microcontroller placed in the project
+- DC motors wired without a motor driver
+
+Fix the flagged issues before you export or hand off to manufacturing.
+
+---
+
+## Code editor
+
+The built-in editor handles Arduino and C++ without needing a separate IDE for writing firmware.
+
+- Syntax highlighting for Arduino/C++
+- Multiple file tabs with create, rename, and delete
+- Tab / Shift+Tab indent and unindent
+- Auto-indent on Enter that matches the previous line and adds a level after `{`
+- Auto-close for brackets and quotes
+- Smart backspace inside empty pairs
+- `Ctrl+/` to toggle line comments
+- `Ctrl+D` to duplicate the current line
+- Smart `Home` key (jumps to first non-whitespace, then column 0 on second press)
+
+---
+
+## PCB view
+
+Your schematic generates a PCB layout automatically. Copper traces, pads, and footprints are all rendered without any additional work on your end.
+
+Export options:
+- Schematic: SVG, PNG, PDF, JSON
+- PCB: SVG, PNG, PDF, Gerber JSON
+- BOM: CSV
+- Full project: `.helix` file
+
+---
+
+## Project templates
+
+Four starting points to skip the blank canvas:
+
+| Template | What it includes |
+|---|---|
+| Line Following Robot | IR sensors, motor driver, ESP32, PID loop firmware |
+| Quadcopter Drone | IMU, ESCs, flight controller firmware scaffold |
+| 6-DOF Robotic Arm | Six servos, PCA9685, IK firmware scaffold |
+| Blank | Empty canvas, your active board pre-selected |
+
+---
+
+## Keyboard shortcuts
+
+### Global
+
+| Action | Shortcut |
+|---|---|
+| Save project | `Ctrl+S` |
+| Undo | `Ctrl+Z` |
+| Redo | `Ctrl+Y` |
+| Toggle sidebar | `Ctrl+B` |
+| Toggle AI chat | `Ctrl+J` |
+| Open AI builder | `Ctrl+K` / `Cmd+K` |
+| Show help | `Ctrl+/` |
+
+### Schematic
+
+| Action | Shortcut |
+|---|---|
+| Wire pins | Click pin, then click target pin |
+| Cancel wiring | `Esc` |
+| Rotate component | `R` |
+| Delete component | `Del` |
+| Pan | Drag empty area |
+| Zoom | Mouse wheel |
+
+### Code editor
+
+| Action | Shortcut |
+|---|---|
+| Indent | `Tab` |
+| Unindent | `Shift+Tab` |
+| Toggle comment | `Ctrl+/` |
+| Duplicate line | `Ctrl+D` |
+| Smart home | `Home` |
+| Auto-close | Type `(`, `[`, `{`, `"`, `'` |
 
 ---
 
 ## Project file format
 
-HELIX projects save as `.helix` files (JSON):
+Projects save as `.helix` files, which are plain JSON:
 
 ```json
 {
   "version": 4,
   "board": "ESP32",
-  "tree": { ... file tree structure ... },
-  "files": { "main.ino": "...", "config.h": "..." },
-  "placed": [ ... components ... ],
-  "wires": [ ... connections ... ]
+  "tree": { "...file tree structure..." },
+  "files": {
+    "main.ino": "...",
+    "config.h": "..."
+  },
+  "placed": [ "...placed components..." ],
+  "wires": [ "...connections..." ]
 }
 ```
 
-These are plain JSON, so you can edit them by hand, version-control them with git, or generate them programmatically.
+They're readable, version-controllable with git, and editable by hand. You can also generate them programmatically.
 
 ---
 
 ## Architecture
 
-HELIX is a single-page React application with no backend. Everything runs in your browser:
+HELIX is a single-page React application with no backend. Everything runs in the browser.
 
 - **State**: React hooks, persisted to localStorage
-- **Schematic**: SVG with HTML overlay for components, transform-based pan/zoom
+- **Schematic**: SVG canvas with HTML overlay, transform-based pan and zoom
 - **Code editor**: textarea with syntax-highlighted overlay
-- **AI calls**: direct fetch to Ollama/Anthropic/OpenAI APIs from the browser
+- **AI calls**: direct fetch from the browser to Ollama / Anthropic / OpenAI
 - **Persistence**: localStorage for auto-save, File API for manual project export
 
-This means HELIX:
-- Has no server costs
-- Works fully offline (with Ollama)
-- Keeps your designs private
-- Can be hosted anywhere as a static site
-
----
-
-## Roadmap
-
-Planned for future versions:
-- Real Arduino CLI integration via Electron wrapper
-- ROS 2 node generation
-- Hardware-in-the-loop debugging
-- Multi-board projects
-- Component library marketplace
-- Collaboration via shared `.helix` files
-- More templates (hexapod, FPV drone, mecanum drive, SCARA arm)
-- Wokwi-style simulation
+Because there's no backend, HELIX has no server costs, works fully offline with Ollama, keeps your designs private, and can be hosted as a plain static site.
 
 ---
 
 ## Contributing
 
-Contributions welcome. The whole app is one file (`src/Helix.jsx`) to keep things hackable.
+Contributions are welcome. The entire app lives in `src/Helix.jsx` intentionally, to keep it easy to read, fork, and hack on.
 
-To add a new component:
+### Adding a component
+
 1. Open `src/Helix.jsx`
-2. Find `ROBOTICS_LIB` near the top
-3. Add an entry following the existing format:
-   ```js
-   { id:"unique_id", name:"Display Name", category:"Sensors", domain:"all",
-     w:80, h:70, desc:"Short description", voltage:3.3,
-     pins:[{l:"VCC",s:"L",o:12,t:"pwr"}, ...] }
-   ```
-4. Pin sides: `"L"` (left) or `"R"` (right). `o` is vertical offset in pixels.
-5. Pin types: `pwr`, `gnd`, `gpio`, `pwm`, `i2c`, `spi`, `uart`, `adc`, `dac`, `phase`, `enc`, `can`
+2. Find the `ROBOTICS_LIB` array near the top
+3. Add a new entry:
 
-To add a project template:
-1. Find `TEMPLATES` constant
+```js
+{
+  id: "unique_id",
+  name: "Display Name",
+  category: "Sensors",
+  domain: "all",
+  w: 80,
+  h: 70,
+  desc: "Short description",
+  voltage: 3.3,
+  pins: [
+    { l: "VCC", s: "L", o: 12, t: "pwr" },
+    { l: "GND", s: "L", o: 28, t: "gnd" },
+    { l: "OUT", s: "R", o: 20, t: "gpio" }
+  ]
+}
+```
+
+Pin sides: `"L"` (left) or `"R"` (right). `o` is vertical offset in pixels. Pin types: `pwr`, `gnd`, `gpio`, `pwm`, `i2c`, `spi`, `uart`, `adc`, `dac`, `phase`, `enc`, `can`.
+
+### Adding a template
+
+1. Find the `TEMPLATES` constant in `src/Helix.jsx`
 2. Add an entry with `name`, `desc`, `components`, and `code`
+
+---
+
+## Roadmap
+
+Things coming in future versions:
+
+- Arduino CLI integration via an Electron wrapper for direct flashing
+- ROS 2 node generation
+- Hardware-in-the-loop debugging
+- Multi-board projects
+- Community component library
+- Collaboration via shared `.helix` files
+- More templates: hexapod, FPV drone, mecanum drive, SCARA arm
+- Wokwi-style simulation
 
 ---
 
@@ -323,4 +418,4 @@ MIT. See [LICENSE](LICENSE).
 
 ## Credits
 
-Built by [Amay Labs](https://github.com/amaylabs). If HELIX helps you build something cool, I'd love to see it. Open an issue or tag @amaylabs.
+Built by [Amay Labs](https://github.com/amaylabs). If HELIX helps you build something, open an issue or tag @amaylabs. Always happy to see what people make with it.
