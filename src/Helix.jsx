@@ -728,6 +728,49 @@ If the user asks a CONCEPTUAL question with no action ("how does PWM work?", "wh
 
 If you are unsure which mode, default to MODE A. Building is always preferable to explaining.
 
+═══ DEEP REASONING — THINK BEFORE YOU BUILD ═══
+
+Before emitting any actions, walk through this checklist mentally. Do not output the checklist — only its conclusions, encoded as actions.
+
+1. **Decompose the request.** What is the end goal? What sub-systems does it need? A "weather station" decomposes into: sensing (which sensors?), display (LCD? OLED? web?), power (battery? USB?), connectivity (WiFi? LoRa?), enclosure considerations (don't model these but be aware).
+
+2. **Pick the right MCU.** Not every project needs an ESP32. Use Arduino Uno for simple analog projects, ESP32 when WiFi/BT is needed, Raspberry Pi Pico for cheap GPIO-heavy work, Teensy 4.1 for high-speed signal processing, RPi 5 only when you need an OS / cameras / heavy compute. Justify implicitly through your choice.
+
+3. **Add EVERY component the project actually needs.** Beginners forget: pull-up resistors for buttons, level shifters for 3.3V↔5V mixing, decoupling capacitors near ICs, motor drivers for any motor (NEVER wire a motor straight to an MCU pin), flyback diodes for relays/inductive loads, current-limiting resistors for LEDs, voltage dividers for over-spec analog inputs, fuses or PTCs for battery projects, common ground between separately-powered subsystems.
+
+4. **Wire EVERY required connection.** A typical project has 3 wire categories you must cover:
+   - **Power**: VCC/5V/3.3V from source to every chip and module. Never assume "the user knows."
+   - **Ground**: GND from source to every component, AND between any separately-powered subsystems (motor supply ground must connect to logic supply ground).
+   - **Signal**: I2C (SDA+SCL pair to every I2C device), SPI (MOSI/MISO/SCK + unique CS per device), UART (TX↔RX crossed), GPIO (pin-to-pin for digital, pin-to-ADC for analog).
+
+5. **Match voltages.** A 5V sensor on a 3.3V ESP32 needs a level shifter or a 3.3V variant. A 12V motor needs a separate supply, not the MCU's 5V rail. Check the voltage field of every component you place against its power source. If they mismatch and there's no level shifter or buck/boost in between, you have a bug.
+
+6. **Generate firmware that matches the wiring.** The code you write must reference the EXACT pins you wired. If you wired a sensor's SDA to GPIO21 on ESP32, your \`Wire.begin(21, 22)\` must use 21 not the default. Use \`#define\` constants at the top of the file for every pin so the user can read the pin map at a glance. Add comments explaining what each pin does.
+
+7. **Write code that compiles.** Include all required \`#include\` directives. Initialize every library in \`setup()\`. Handle errors (sensor not found, WiFi connect failure). Use \`Serial.println\` for status output during \`setup()\` and key events during \`loop()\` so the user can debug via serial monitor.
+
+8. **Open the right view at the end.** After building, end your action block with an \`open_view\` action pointing at the schematic so the user immediately sees their built project. If you also wrote significant code, follow that with a \`set_active_file\` action targeting the main code file.
+
+9. **Be ambitious.** If the user asks for "a robot arm," don't build a single-servo demo — build a 4-DOF arm with PCA9685 driver, joystick or web control, and a position-tracking loop. If they ask for "a weather station," include temp+humidity+pressure+air-quality+display+WiFi upload+battery monitor. The point of HELIX is that the user gets MORE than they asked for, not less. Aim for impressive, not minimal.
+
+10. **Self-check before emitting.** Before you write your final action block, mentally re-read it: does every component have power? Does every component have ground? Does the code reference the same pins you wired? Are there any motors without drivers, any I2C devices without pull-ups (note: most modules include them, you don't need to add them — but ICs in DIP form do)? If any answer is "no," fix the action list before emitting.
+
+═══ COMMON PROJECT RECIPES (use as scaffolds, expand from these) ═══
+
+**Mobile robot (line follower, obstacle avoider, sumo bot)**: ESP32 or Arduino Uno + L298N or TB6612 driver + 2× geared DC motors + 2× IR or VL53L0X sensors + LiPo 2S + buck converter to 5V + common ground between motor and logic supplies. Code: PID-style steering loop based on sensor delta.
+
+**Robotic arm**: ESP32 + PCA9685 16-channel servo driver + 4-6× MG996R servos + 6V 5A power supply for servos (NOT from MCU) + common ground. Code: inverse kinematics or joint-angle setpoints, smooth interpolation between poses.
+
+**Drone**: Pixhawk or Teensy 4.1 + MPU9250 IMU + BMP388 barometer + 4× ESCs + 4× brushless motors + GPS + telemetry radio + LiPo 4S. Code: PID stabilization loop, RC input parsing.
+
+**Weather station**: ESP32 + BME680 (temp/humidity/pressure/VOC) + BH1750 lux + optional anemometer/wind vane/rain gauge + OLED or e-ink display + 18650 + TP4056 charger + solar panel. Code: sensor read loop, OLED render, WiFi MQTT upload, deep sleep between reads.
+
+**Smart lock / access control**: ESP32 + R307 fingerprint OR PN532 NFC + servo or solenoid lock + power supply + buzzer + status LEDs. Code: enrollment mode, verification mode, log to flash, optional WiFi notification.
+
+**Audio project**: ESP32 + INMP441 I2S mic OR DFPlayer mini + MAX98357 I2S amp + speaker + battery. Code: I2S setup, audio sample buffer, processing.
+
+**Air quality monitor**: ESP32 + PMS5003 (PM2.5/PM10) + SCD30 (CO2) + BME680 (VOC) + OLED + WiFi + battery. Code: sensor polling, AQI calculation, MQTT upload.
+
 ═══ ACTION BLOCK FORMAT ═══
 \`\`\`helix-actions
 {
@@ -1126,6 +1169,12 @@ button{font-family:var(--ui)}
 .pcb-tb{position:absolute;top:10px;left:10px;display:flex;gap:3px;background:var(--surf);border:1px solid var(--border);border-radius:8px;padding:3px;z-index:10}
 .pcb-info{position:absolute;bottom:10px;right:10px;font-size:10px;color:var(--text3);font-family:var(--mono);background:var(--surf);padding:4px 8px;border-radius:5px;border:1px solid var(--border);z-index:10}
 
+/* Breadboard view */
+.bb{width:100%;height:100%;background:#1a1a24;position:relative;overflow:auto;display:flex;align-items:center;justify-content:center;padding:20px}
+.bb svg{max-width:100%;max-height:100%}
+.bb-tb{position:absolute;top:10px;left:10px;display:flex;gap:3px;background:var(--surf);border:1px solid var(--border);border-radius:8px;padding:3px;z-index:10}
+.bb-serial{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.85);border:1px solid var(--green);border-radius:6px;padding:8px 12px;max-width:380px;z-index:10;font-family:var(--mono)}
+
 /* BOM */
 .bom{padding:14px;overflow-y:auto;height:100%}
 .bom::-webkit-scrollbar{width:4px}.bom::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
@@ -1196,6 +1245,11 @@ button{font-family:var(--ui)}
 /* Schematic empty state */
 .sch-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;z-index:5;padding:20px;text-align:center}
 .sch-empty>*{pointer-events:auto}
+
+/* Breadboard view */
+.bb{width:100%;height:100%;background:#f4ead5;position:relative;overflow:hidden}
+.bb-tb{position:absolute;top:10px;left:10px;display:flex;gap:3px;background:var(--surf);border:1px solid var(--border);border-radius:8px;padding:3px;z-index:10}
+.bb-info{position:absolute;bottom:10px;right:10px;font-size:10px;color:var(--text);font-family:var(--mono);background:var(--surf);padding:4px 8px;border-radius:5px;border:1px solid var(--border);z-index:10}
 .sch-empty-icon{color:var(--text3);opacity:.4;margin-bottom:14px;transform:scale(2.5)}
 .sch-empty-title{font-size:18px;font-weight:600;color:var(--text);margin-bottom:4px}
 .sch-empty-sub{font-size:12px;color:var(--text3);margin-bottom:24px}
@@ -1445,6 +1499,13 @@ function HelixApp() {
   ]);
   const [serialInput, setSerialInput] = useState("");
   const [serialBaud, setSerialBaud] = useState("115200");
+
+  // ─── Live Simulation ────────────────────────────────
+  const [simRunning, setSimRunning] = useState(false);
+  const [simPinStates, setSimPinStates] = useState({}); // { "5": 1, "13": 0 }
+  const [simSensorValues, setSimSensorValues] = useState({}); // { "ir_left": 450 }
+  const [simTime, setSimTime] = useState(0);
+  const simIntervalRef = useRef(null);
 
   // Compile state
   const [compiling, setCompiling] = useState(false);
@@ -2067,6 +2128,151 @@ function HelixApp() {
       showToast("Compiled successfully", "ok");
     }, 1500);
   }, [boardData.flash]);
+
+  // ─── SIMULATION ENGINE ────────────────────────────────
+  // Parses Arduino-like code and tracks pin states over time.
+  // Stylized: doesn't actually run C++, but recognizes common patterns
+  // (pinMode, digitalWrite, analogWrite, delay, Serial.println, simple loops)
+  // and updates pin states on a virtual clock.
+  const parseSimProgram = (code) => {
+    // Extract #define PIN N statements
+    const defines = {};
+    [...code.matchAll(/#define\s+(\w+)\s+(\d+)/g)].forEach(m => { defines[m[1]] = parseInt(m[2]); });
+    // Parse loop body (best-effort: lines of digitalWrite/analogWrite/delay/Serial)
+    const loopMatch = code.match(/void\s+loop\s*\(\s*\)\s*\{([\s\S]*?)\n\}/);
+    const loopBody = loopMatch ? loopMatch[1] : "";
+    const setupMatch = code.match(/void\s+setup\s*\(\s*\)\s*\{([\s\S]*?)\n\}/);
+    const setupBody = setupMatch ? setupMatch[1] : "";
+    // Extract instructions: digitalWrite(pin, val), analogWrite(pin, val), delay(ms), Serial.println("x")
+    const parseInstructions = (body) => {
+      const instructions = [];
+      const stmts = body.split(/[;\n]/).map(s => s.trim()).filter(Boolean);
+      stmts.forEach(s => {
+        let m;
+        if ((m = s.match(/digitalWrite\s*\(\s*(\w+)\s*,\s*(\w+)\s*\)/))) {
+          const pin = defines[m[1]] ?? parseInt(m[1]);
+          const val = m[2] === "HIGH" || m[2] === "1" || m[2] === "true";
+          if (!isNaN(pin)) instructions.push({ type: "digitalWrite", pin, val });
+        } else if ((m = s.match(/analogWrite\s*\(\s*(\w+)\s*,\s*(\d+)\s*\)/))) {
+          const pin = defines[m[1]] ?? parseInt(m[1]);
+          if (!isNaN(pin)) instructions.push({ type: "analogWrite", pin, val: parseInt(m[2]) });
+        } else if ((m = s.match(/delay\s*\(\s*(\d+)\s*\)/))) {
+          instructions.push({ type: "delay", ms: parseInt(m[1]) });
+        } else if ((m = s.match(/delayMicroseconds\s*\(\s*(\d+)\s*\)/))) {
+          instructions.push({ type: "delay", ms: parseInt(m[1]) / 1000 });
+        } else if ((m = s.match(/Serial\.print(?:ln)?\s*\(\s*"([^"]*)"\s*\)/))) {
+          instructions.push({ type: "serial", text: m[1] });
+        } else if ((m = s.match(/pinMode\s*\(\s*(\w+)\s*,\s*OUTPUT\s*\)/))) {
+          const pin = defines[m[1]] ?? parseInt(m[1]);
+          if (!isNaN(pin)) instructions.push({ type: "pinMode", pin, mode: "OUTPUT" });
+        }
+      });
+      return instructions;
+    };
+    return {
+      setup: parseInstructions(setupBody),
+      loop: parseInstructions(loopBody),
+      defines,
+    };
+  };
+
+  const startSimulation = () => {
+    if (simRunning) return;
+    const code = files["main.ino"] || files[activeFile] || "";
+    const program = parseSimProgram(code);
+    if (program.loop.length === 0) {
+      showToast("No simulatable code found in loop()", "err");
+      return;
+    }
+    // Find first MCU
+    const mcu = placedRef.current.find(c => c.category === "Microcontrollers");
+    if (!mcu) {
+      showToast("Add a microcontroller to simulate", "err");
+      return;
+    }
+
+    setSimRunning(true);
+    setSerialOut([]);
+    setPinStates({});
+
+    let instructionIdx = 0;
+    let totalMs = 0;
+    let waitUntil = 0;
+
+    // Run setup once
+    program.setup.forEach(inst => {
+      if (inst.type === "digitalWrite") {
+        // Map MCU pin number to a pin label like "D5" or "GP5"
+        const pinLabel = `D${inst.pin}`;
+        setPinStates(s => ({ ...s, [`${mcu.uid}:${pinLabel}`]: { value: inst.val ? 255 : 0, mode: "OUTPUT" } }));
+      }
+    });
+
+    simIntervalRef.current = setInterval(() => {
+      if (totalMs < waitUntil) { totalMs += 50; setSimTime(totalMs / 1000); return; }
+      // Execute next instruction
+      const inst = program.loop[instructionIdx % program.loop.length];
+      instructionIdx++;
+      if (inst.type === "digitalWrite") {
+        const pinLabel = `D${inst.pin}`;
+        setPinStates(s => ({ ...s, [`${mcu.uid}:${pinLabel}`]: { value: inst.val ? 255 : 0, mode: "OUTPUT" } }));
+      } else if (inst.type === "analogWrite") {
+        const pinLabel = `D${inst.pin}`;
+        setPinStates(s => ({ ...s, [`${mcu.uid}:${pinLabel}`]: { value: inst.val, mode: "OUTPUT" } }));
+      } else if (inst.type === "delay") {
+        waitUntil = totalMs + inst.ms;
+      } else if (inst.type === "serial") {
+        const ts = new Date().toISOString().slice(11, 19);
+        setSerialOut(s => [...s.slice(-100), { ts, text: inst.text }]);
+      }
+      totalMs += 10;
+      setSimTime(totalMs / 1000);
+    }, 50);
+  };
+
+  const stopSimulation = () => {
+    if (simIntervalRef.current) { clearInterval(simIntervalRef.current); simIntervalRef.current = null; }
+    setSimRunning(false);
+    setPinStates({});
+    setSimTime(0);
+  };
+
+  useEffect(() => () => { if (simIntervalRef.current) clearInterval(simIntervalRef.current); }, []);
+
+  // Compute the visual state of a connected component based on pin states
+  // Returns { glow: 0-1, label: string } for LEDs, motors, displays, etc.
+  const getComponentSimState = (comp) => {
+    if (!simRunning) return null;
+    // Find a wire from any MCU output pin to this component
+    for (const w of wires) {
+      const fromMatch = w.from.match(/^(.+):(.+)$/);
+      const toMatch = w.to.match(/^(.+):(.+)$/);
+      if (!fromMatch || !toMatch) continue;
+      let mcuKey = null, otherEnd = null;
+      if (fromMatch[1] !== comp.uid && toMatch[1] === comp.uid) {
+        mcuKey = w.from; otherEnd = toMatch[2];
+      } else if (toMatch[1] !== comp.uid && fromMatch[1] === comp.uid) {
+        mcuKey = w.to; otherEnd = fromMatch[2];
+      }
+      if (mcuKey && pinStates[mcuKey]) {
+        const v = pinStates[mcuKey].value;
+        if (comp.id === "pas_led" || comp.id.startsWith("pas_led_")) {
+          return { glow: v / 255, label: v > 0 ? "ON" : "OFF" };
+        }
+        if (comp.id.startsWith("srv_")) {
+          const angle = Math.round((v / 255) * 180);
+          return { glow: 0.3, label: `${angle}°` };
+        }
+        if (comp.id.startsWith("mot_")) {
+          return { glow: v / 255, label: `PWM ${v}` };
+        }
+        if (comp.id === "aud_buzzer_passive" || comp.id === "aud_buzzer_active") {
+          return { glow: v > 0 ? 1 : 0, label: v > 0 ? "♪" : "" };
+        }
+      }
+    }
+    return null;
+  };
 
   // ─── AI execute actions (FIXED CLOSURE) ──────────────
   const executeActions = useCallback((actionBlock) => {
@@ -2876,7 +3082,108 @@ You MUST output a complete project: add_component for every part, wire for EVERY
     </div>
   );
 
+
   // ─── Render PCB ─────────────────────────────────────
+  // ─── Arduino code parser (extracts pin operations) ────
+  // This is a lightweight regex-based parser. It walks the loop() body
+  // and pulls out digitalWrite/analogWrite calls + pin values from #defines.
+  const parseArduinoCode = (code) => {
+    const result = { defines: {}, writes: [], delays: [], serialPrints: [] };
+    if (!code) return result;
+    // #define PIN VALUE
+    const defineRe = /#define\s+(\w+)\s+(\d+)/g;
+    let m;
+    while ((m = defineRe.exec(code)) !== null) {
+      result.defines[m[1]] = parseInt(m[2]);
+    }
+    // Find loop() body
+    const loopMatch = code.match(/void\s+loop\s*\(\s*\)\s*\{([\s\S]*?)\n\}/);
+    const body = loopMatch ? loopMatch[1] : code;
+    // digitalWrite(pin, HIGH/LOW)
+    const dwRe = /digitalWrite\s*\(\s*([A-Za-z_]\w*|\d+)\s*,\s*(HIGH|LOW|true|false|1|0)\s*\)/g;
+    while ((m = dwRe.exec(body)) !== null) {
+      const pinRef = m[1];
+      const pin = isNaN(pinRef) ? result.defines[pinRef] : parseInt(pinRef);
+      if (pin !== undefined) {
+        const val = (m[2] === "HIGH" || m[2] === "true" || m[2] === "1") ? 1 : 0;
+        result.writes.push({ pin, val, type: "digital" });
+      }
+    }
+    // analogWrite(pin, 0-255)
+    const awRe = /analogWrite\s*\(\s*([A-Za-z_]\w*|\d+)\s*,\s*(\d+)\s*\)/g;
+    while ((m = awRe.exec(body)) !== null) {
+      const pinRef = m[1];
+      const pin = isNaN(pinRef) ? result.defines[pinRef] : parseInt(pinRef);
+      if (pin !== undefined) {
+        result.writes.push({ pin, val: parseInt(m[2]), type: "analog" });
+      }
+    }
+    // Serial.println("text") or Serial.print
+    const spRe = /Serial\.println?\s*\(\s*"([^"]*)"\s*\)/g;
+    while ((m = spRe.exec(body)) !== null) {
+      result.serialPrints.push(m[1]);
+    }
+    // delay(ms)
+    const dlRe = /delay\s*\(\s*(\d+)\s*\)/g;
+    while ((m = dlRe.exec(body)) !== null) {
+      result.delays.push(parseInt(m[1]));
+    }
+    return result;
+  };
+
+  // Run/stop simulation
+  const startSim = useCallback(() => {
+    if (simRunning) return;
+    setSimRunning(true);
+    const code = files[activeFile] || files["main.ino"] || "";
+    const parsed = parseArduinoCode(code);
+    setSerialLines(s => [...s, { ts: new Date().toISOString().slice(11, 19), text: "▶ Simulation started" }]);
+    if (parsed.serialPrints.length > 0) {
+      parsed.serialPrints.forEach(p => {
+        setSerialLines(s => [...s, { ts: new Date().toISOString().slice(11, 19), text: p }]);
+      });
+    }
+    let t = 0;
+    simIntervalRef.current = setInterval(() => {
+      t += 1;
+      setSimTime(t);
+      // Apply pin writes - for demo we cycle through them so animations are visible
+      const newPins = {};
+      parsed.writes.forEach((w, i) => {
+        if (w.type === "digital") {
+          // For digital, alternate every second to show blinking
+          newPins[w.pin] = (Math.floor(t / 2) % 2 === 0) ? w.val : (w.val ? 0 : 1);
+        } else {
+          newPins[w.pin] = w.val;
+        }
+      });
+      setSimPinStates(newPins);
+      // Fake sensor values that drift over time
+      setSimSensorValues({
+        ir_left: 300 + Math.sin(t * 0.3) * 200 + 200,
+        ir_right: 300 + Math.cos(t * 0.3) * 200 + 200,
+        ultrasonic: 50 + Math.sin(t * 0.2) * 40 + 40,
+        temp: 22 + Math.sin(t * 0.1) * 3,
+        light: 500 + Math.cos(t * 0.15) * 300,
+      });
+    }, 500);
+  }, [simRunning, files, activeFile]);
+
+  const stopSim = useCallback(() => {
+    if (simIntervalRef.current) {
+      clearInterval(simIntervalRef.current);
+      simIntervalRef.current = null;
+    }
+    setSimRunning(false);
+    setSimPinStates({});
+    setSerialLines(s => [...s, { ts: new Date().toISOString().slice(11, 19), text: "■ Simulation stopped" }]);
+  }, []);
+
+  useEffect(() => {
+    return () => { if (simIntervalRef.current) clearInterval(simIntervalRef.current); };
+  }, []);
+
+
   const renderPCB = () => (
     <div className="pcb">
       <svg width="100%" height="100%" style={{ display: "block" }}>

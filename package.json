@@ -1,7 +1,7 @@
 {
   "name": "helix-ide",
   "private": true,
-  "version": "4.6.0",
+  "version": "4.7.2",
   "type": "module",
   "description": "HELIX — Open-source robotics engineering IDE with AI assistance",
   "scripts": {
