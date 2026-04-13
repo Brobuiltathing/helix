@@ -1115,6 +1115,28 @@ button{font-family:var(--ui)}
 
 /* Dashboard */
 .dash{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;overflow-y:auto}
+
+/* ── Welcome / opening screen (v4.8) ── */
+.welcome{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 24px;overflow-y:auto;background:radial-gradient(ellipse at center top,rgba(0,229,204,.06),transparent 60%)}
+.welcome-c{max-width:720px;width:100%;display:flex;flex-direction:column;align-items:center;text-align:center}
+.welcome-logo{font-size:56px;font-weight:800;letter-spacing:8px;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px;line-height:1}
+.welcome-tag{color:var(--text2);font-size:18px;margin-bottom:36px;font-weight:400;letter-spacing:.3px}
+.welcome-in-wrap{width:100%;display:flex;gap:8px;margin-bottom:18px;background:var(--surf);border:1.5px solid var(--border2);border-radius:12px;padding:6px;transition:all .15s}
+.welcome-in-wrap:focus-within{border-color:var(--cyan);box-shadow:0 0 0 4px rgba(0,229,204,.08)}
+.welcome-in{flex:1;background:none;border:none;padding:14px 14px;color:var(--text);font-size:15px;font-family:var(--ui);outline:none}
+.welcome-in::placeholder{color:var(--text3)}
+.welcome-go{background:var(--cyan);color:var(--bg);border:none;border-radius:8px;padding:0 22px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--ui);transition:all .12s;white-space:nowrap}
+.welcome-go:hover:not(:disabled){filter:brightness(1.1)}
+.welcome-go:disabled{opacity:.4;cursor:not-allowed}
+.welcome-sug{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:28px;max-width:640px}
+.welcome-chip{background:var(--surf);border:1px solid var(--border);color:var(--text2);padding:7px 13px;border-radius:20px;font-size:11px;cursor:pointer;font-family:var(--ui);transition:all .12s}
+.welcome-chip:hover{background:var(--surf2);border-color:var(--cyan);color:var(--text)}
+.welcome-foot{display:flex;align-items:center;gap:10px;margin-bottom:22px;flex-wrap:wrap;justify-content:center}
+.welcome-link{background:none;border:none;color:var(--text3);font-size:11px;cursor:pointer;font-family:var(--ui);padding:4px 6px;transition:color .1s}
+.welcome-link:hover{color:var(--cyan)}
+.welcome-sep{color:var(--border2);font-size:10px}
+.welcome-note{font-size:10px;color:var(--orange);opacity:.7;font-style:italic;max-width:520px;line-height:1.55;padding-top:16px;border-top:1px solid var(--border)}
+@media (max-width:640px){.welcome-logo{font-size:40px}.welcome-tag{font-size:15px;margin-bottom:24px}}
 .dash-logo{font-size:48px;font-weight:700;letter-spacing:6px;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
 .dash-sub{color:var(--text3);font-size:12px;margin-bottom:32px;letter-spacing:.5px}
 .dash-g{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:680px;width:100%;margin-bottom:24px}
@@ -1128,6 +1150,7 @@ button{font-family:var(--ui)}
 
 /* Status */
 .st{height:22px;background:var(--bg);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 10px;font-size:10px;color:var(--text3);gap:14px;flex-shrink:0;font-family:var(--mono)}
+.st-note{color:var(--orange);font-style:italic;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:50%}
 .dot{width:5px;height:5px;border-radius:50%;display:inline-block;margin-right:3px}
 .dot.g{background:var(--green)}.dot.y{background:var(--orange)}.dot.r{background:var(--red)}
 .st-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-family:var(--mono);font-size:10px;padding:0}
@@ -1425,7 +1448,7 @@ function HelixApp() {
   const [view, setView] = useState(persisted?.view || "dashboard");
   const [sidePanel, setSidePanel] = useState("files");
   const [showSide, setShowSide] = useState(true);
-  const [chatOpen, setChatOpen] = useState(true);
+  const [chatOpen, setChatOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
@@ -1751,11 +1774,11 @@ function HelixApp() {
       if ((e.metaKey || e.ctrlKey) && (e.key === "y" || (e.shiftKey && e.key === "Z"))) { e.preventDefault(); redo(); }
       if ((e.metaKey || e.ctrlKey) && e.key === "s" && !inInput) { e.preventDefault(); manualSave(); }
       if ((e.metaKey || e.ctrlKey) && e.key === "b" && !inInput) { e.preventDefault(); setShowSide(s => !s); }
-      if ((e.metaKey || e.ctrlKey) && e.key === "j" && !inInput) { e.preventDefault(); setChatOpen(s => !s); }
-      if ((e.metaKey || e.ctrlKey) && e.key === "l" && !inInput) {
+      if ((e.metaKey || e.ctrlKey) && (e.key === "j" || e.key === "l")) {
+        // Old chat-panel shortcuts now open Cmd+K for consistency
         e.preventDefault();
-        setChatOpen(true);
-        setTimeout(() => chatInputRef.current?.focus(), 50);
+        setShowCmdK(true);
+        setTimeout(() => cmdKRef.current?.focus(), 50);
       }
       if ((e.metaKey || e.ctrlKey) && e.key === "/" && !inInput) { e.preventDefault(); setShowHelp(true); }
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -3560,7 +3583,7 @@ You MUST output a complete project: add_component for every part, wire for EVERY
             View
             <div className={`dd ${openMenu === "view" ? "show" : ""}`}>
               <button className="dd-i" onClick={() => { setShowSide(s => !s); setOpenMenu(null); }}>Toggle Sidebar <span className="k">Ctrl+B</span></button>
-              <button className="dd-i" onClick={() => { setChatOpen(s => !s); setOpenMenu(null); }}>Toggle AI Chat <span className="k">Ctrl+J</span></button>
+              <button className="dd-i" onClick={() => { setShowCmdK(true); setTimeout(() => cmdKRef.current?.focus(), 50); setOpenMenu(null); }}>AI Build <span className="k">Ctrl+K</span></button>
               <div className="dd-sep"/>
               <button className="dd-i" onClick={() => { openSpecial("drc", "DRC", "drc"); setOpenMenu(null); }}>{I.drc} Design Rule Check</button>
               <button className="dd-i" onClick={() => { openSpecial("serial", "Serial", "serial"); setOpenMenu(null); }}>{I.serial} Serial Monitor</button>
@@ -3596,27 +3619,15 @@ You MUST output a complete project: add_component for every part, wire for EVERY
               {I.comp}<span className="act-tip">Components ({ROBOTICS_LIB.length})</span>
             </button>
             <button className={`act-btn ${activeTab === "schematic" ? "on" : ""}`} onClick={() => openSpecial("schematic", "Schematic", "schematic")}>
-              {I.pcb}<span className="act-tip">Schematic</span>
-            </button>
-            <button className={`act-btn ${activeTab === "pcb" ? "on" : ""}`} onClick={() => openSpecial("pcb", "PCB", "pcb")}>
-              {I.wire}<span className="act-tip">PCB View</span>
-            </button>
-            <button className={`act-btn ${activeTab === "drc" ? "on" : ""}`} onClick={() => openSpecial("drc", "DRC", "drc")}>
-              {I.drc}<span className="act-tip">DRC</span>
+              {I.pcb}<span className="act-tip">Schematic {drcWarningCount > 0 && `· ${drcWarningCount} issues`}</span>
               {drcWarningCount > 0 && <span className="act-bdg">{drcWarningCount}</span>}
             </button>
             <button className={`act-btn ${activeTab === "bom" ? "on" : ""}`} onClick={() => openSpecial("bom", "BOM", "bom")}>
-              {I.bom}<span className="act-tip">BOM</span>
-            </button>
-            <button className={`act-btn ${activeTab === "serial" ? "on" : ""}`} onClick={() => openSpecial("serial", "Serial", "serial")}>
-              {I.serial}<span className="act-tip">Serial</span>
-            </button>
-            <button className={`act-btn ${activeTab === "export" ? "on" : ""}`} onClick={() => openSpecial("export", "Export", "export")}>
-              {I.export}<span className="act-tip">Export</span>
+              {I.bom}<span className="act-tip">Bill of Materials</span>
             </button>
             <div className="act-sep"/>
-            <button className={`act-btn ${chatOpen ? "on" : ""}`} onClick={() => setChatOpen(!chatOpen)}>
-              {I.chat}<span className="act-tip">AI Chat</span>
+            <button className="act-btn" onClick={() => { setShowCmdK(true); setTimeout(() => cmdKRef.current?.focus(), 50); }} style={{color:"var(--cyan)"}}>
+              {I.chat}<span className="act-tip">AI Build (⌘K)</span>
             </button>
             <button className="act-btn" onClick={() => setShowHelp(true)}>
               {I.help}<span className="act-tip">Help</span>
@@ -3702,35 +3713,65 @@ You MUST output a complete project: add_component for every part, wire for EVERY
             </div>
           )}
 
-          {/* Editor or Dashboard */}
+          {/* Opening screen (first-run / empty state) or editor */}
           {view === "dashboard" ? (
-            <div className="dash">
-              <div className="dash-logo">HELIX</div>
-              <div className="dash-sub">v4.0 · Robotics Engineering IDE · Build Anything That Moves</div>
-              <div className="dash-g">
-                {[
-                  { icon: I.plus, t: "New from Template", d: "Line follower, drone, arm presets", a: () => setShowTemplates(true) },
-                  { icon: I.upload, t: "Open Project", d: "Load .helix project file", a: loadProject },
-                  { icon: I.comp, t: "Components", d: `${ROBOTICS_LIB.length} parts in ${CATEGORIES.length} categories`, a: () => { setSidePanel("components"); setShowSide(true); openSpecial("schematic", "Schematic", "schematic"); } },
-                  { icon: I.pcb, t: "Schematic Editor", d: "Design with working pins", a: () => openSpecial("schematic", "Schematic", "schematic") },
-                  { icon: I.code, t: "Code Editor", d: "Syntax-highlighted firmware", a: () => openFile("main.ino") },
-                  { icon: I.chat, t: "HELIX AI", d: "AI builds entire robots", a: () => setChatOpen(true) },
-                ].map((c, i) => (
-                  <div key={i} className="dc" onClick={c.a}>
-                    <div className="dc-i">{c.icon}</div>
-                    <div className="dc-t">{c.t}</div>
-                    <div className="dc-d">{c.d}</div>
-                  </div>
-                ))}
-              </div>
-              <div className="dash-sec-t">Quick Templates</div>
-              <div className="dash-tg">
-                {Object.entries(TEMPLATES).filter(([k]) => k !== "blank").map(([k, t]) => (
-                  <div key={k} className="dc" style={{padding:12}} onClick={() => loadTemplate(k)}>
-                    <div className="dc-t" style={{fontSize:12}}>{t.name}</div>
-                    <div className="dc-d" style={{fontSize:10}}>{t.desc}</div>
-                  </div>
-                ))}
+            <div className="welcome">
+              <div className="welcome-c">
+                <div className="welcome-logo">HELIX</div>
+                <div className="welcome-tag">What do you want to build?</div>
+                <div className="welcome-in-wrap">
+                  <input
+                    className="welcome-in"
+                    placeholder="A line-following robot, a weather station, a robotic arm..."
+                    value={cmdKInput}
+                    onChange={e => setCmdKInput(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === "Enter" && cmdKInput.trim() && !cmdKLoading) {
+                        setView("editor");
+                        if (!tabs.find(t => t.id === "schematic")) {
+                          setTabs(t => [...t, { id: "schematic", label: "Schematic", type: "schematic" }]);
+                        }
+                        setActiveTab("schematic");
+                        runCmdK();
+                      }
+                    }}
+                    autoFocus
+                  />
+                  <button
+                    className="welcome-go"
+                    disabled={!cmdKInput.trim() || cmdKLoading}
+                    onClick={() => {
+                      setView("editor");
+                      if (!tabs.find(t => t.id === "schematic")) {
+                        setTabs(t => [...t, { id: "schematic", label: "Schematic", type: "schematic" }]);
+                      }
+                      setActiveTab("schematic");
+                      runCmdK();
+                    }}
+                  >{cmdKLoading ? "Building..." : "Build →"}</button>
+                </div>
+                <div className="welcome-sug">
+                  {[
+                    "Blinking LED with Arduino Uno",
+                    "Line follower with VL53L0X sensors",
+                    "Weather station: BME680 + OLED + WiFi upload",
+                    "6-DOF robotic arm with PCA9685",
+                    "Smart door lock with R307 fingerprint",
+                    "Obstacle-avoiding rover with ultrasonic + L298N",
+                  ].map(s => (
+                    <button key={s} className="welcome-chip" onClick={() => { setCmdKInput(s); }}>{s}</button>
+                  ))}
+                </div>
+                <div className="welcome-foot">
+                  <button className="welcome-link" onClick={() => { setView("editor"); openFile("main.ino"); }}>Skip → open empty editor</button>
+                  <span className="welcome-sep">·</span>
+                  <button className="welcome-link" onClick={loadProject}>Open a .helix file</button>
+                  <span className="welcome-sep">·</span>
+                  <button className="welcome-link" onClick={() => setShowSettings(true)}>Settings</button>
+                </div>
+                <div className="welcome-note">
+                  HELIX generates schematics and code. It does not simulate or flash — copy the generated code into Arduino IDE to run it on real hardware.
+                </div>
               </div>
             </div>
           ) : (
@@ -3751,46 +3792,17 @@ You MUST output a complete project: add_component for every part, wire for EVERY
             </div>
           )}
 
-          {/* AI Chat */}
-          {chatOpen && (
-            <div className="chat">
-              <div className="chat-h">
-                <div className="chat-hl">{I.chat} HELIX AI</div>
-                <div style={{display:"flex",gap:5,alignItems:"center"}}>
-                  <span className="chat-badge">{aiProvider === "ollama" ? ollamaModel : aiProvider === "anthropic" ? "Claude" : "GPT-4o"}</span>
-                  <button className="mod-x" onClick={() => setChatOpen(false)}>{I.x}</button>
-                </div>
-              </div>
-              <div className="chat-m">
-                {messages.map((m, i) => <div key={i} className={`msg ${m.role === "u" ? "u" : m.role === "s" ? "s" : m.role === "exec" ? "exec" : "a"}`}>{m.text}</div>)}
-                {chatLoading && <div className="msg a"><div className="dots"><span/><span/><span/></div></div>}
-                <div ref={chatEnd}/>
-              </div>
-              <div className="chat-i">
-                <div className="chat-r">
-                  <textarea ref={chatInputRef} className="chat-in" value={chatInput} onChange={e => setChatInput(e.target.value)}
-                    onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChat(); } }}
-                    placeholder="Build a robot, add components, generate code..." rows={1}/>
-                  <button className="send" onClick={sendChat} disabled={!chatInput.trim() || chatLoading}>{I.send}</button>
-                </div>
-                <div className="chips">
-                  {["Build a line follower", "Design a quadcopter", "Add 6-DOF arm", "Wire MPU6050"].map(s => (
-                    <button key={s} className="chip" onClick={() => setChatInput(s)}>{s}</button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Chat panel removed in v4.8 — Cmd+K is the only AI surface */}
         </div>
 
         {/* Status Bar */}
         <div className="st">
-          <span><span className="dot g"/>HELIX v4.5</span>
+          <span><span className="dot g"/>HELIX v4.8</span>
           <button className="st-btn" onClick={() => setShowSettings(true)} title="Edit project name">{projectName}</button>
           <span>{selectedBoard}</span>
-          <button className="st-btn" onClick={() => openSpecial("drc", "DRC", "drc")}>
-            <span className={`dot ${drcWarningCount === 0 ? "g" : "y"}`}/>{drcWarningCount} DRC
-          </button>
+          {drcWarningCount > 0 && <span style={{color:"var(--orange)"}}>{drcWarningCount} DRC issues</span>}
+          <span style={{flex:1}}/>
+          <span className="st-note" title="HELIX is an honest design tool. It does not simulate or flash code.">Design-only tool — copy code to Arduino IDE to run</span>
           <span style={{flex:1}}/>
           <button className="st-btn" onClick={() => setShowSettings(true)} title="AI settings">
             <span className={`dot ${aiConnected === true ? "g" : aiConnected === false ? "r" : "y"}`}/>
@@ -3866,15 +3878,37 @@ You MUST output a complete project: add_component for every part, wire for EVERY
                 {cmdKLoading && <div className="cmdk-load"><div className="dots"><span/><span/><span/></div> Building...</div>}
               </div>
               <div className="cmdk-suggestions">
-                {[
-                  "Build a self-guided line follower with VL53L0X sensors",
-                  "Make an obstacle-avoiding robot",
-                  "Create a 6-DOF robotic arm with PCA9685",
-                  "Build a weather station with OLED display",
-                  "Wire a quadcopter with Pixhawk",
-                ].map(s => (
-                  <button key={s} className="cmdk-sg" onClick={() => { setCmdKInput(s); setTimeout(() => cmdKRef.current?.focus(), 0); }}>{s}</button>
-                ))}
+                {(() => {
+                  // Show recent user prompts (last 4) + suggestions
+                  const recentPrompts = messages
+                    .filter(m => m.role === "u")
+                    .slice(-4)
+                    .reverse()
+                    .map(m => m.text.replace(/^\[Cmd\+K\]\s*/, ""));
+                  const defaults = [
+                    "Build a self-guided line follower with VL53L0X sensors",
+                    "Make an obstacle-avoiding robot with ultrasonic",
+                    "Create a 6-DOF robotic arm with PCA9685",
+                    "Build a weather station with BME680 and OLED",
+                    "Wire a quadcopter with Pixhawk and MPU9250",
+                  ];
+                  return (
+                    <>
+                      {recentPrompts.length > 0 && (
+                        <div style={{fontSize:9,color:"var(--text3)",textTransform:"uppercase",letterSpacing:1,padding:"4px 0 2px"}}>Recent</div>
+                      )}
+                      {recentPrompts.map((s, i) => (
+                        <button key={"r"+i} className="cmdk-sg" style={{borderColor:"var(--border2)"}} onClick={() => { setCmdKInput(s); setTimeout(() => cmdKRef.current?.focus(), 0); }}>
+                          <span style={{color:"var(--text3)",marginRight:6,fontFamily:"var(--mono)",fontSize:10}}>↻</span>{s}
+                        </button>
+                      ))}
+                      <div style={{fontSize:9,color:"var(--text3)",textTransform:"uppercase",letterSpacing:1,padding:"8px 0 2px"}}>Try</div>
+                      {defaults.map(s => (
+                        <button key={s} className="cmdk-sg" onClick={() => { setCmdKInput(s); setTimeout(() => cmdKRef.current?.focus(), 0); }}>{s}</button>
+                      ))}
+                    </>
+                  );
+                })()}
               </div>
               <div className="cmdk-foot">
                 <span style={{color:"var(--text3)"}}>Enter to build · Esc to cancel</span>
