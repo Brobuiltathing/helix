@@ -4,7 +4,7 @@
 
 HELIX is a desktop-style IDE for designing robots end to end. Place real components on a schematic, wire them with click-to-click connections, generate Arduino/PlatformIO code, validate the design with built-in DRC, and let an AI assistant build entire robots for you. Supports local Ollama models so it runs fully offline if you want.
 
-Built by [Amay Labs](https://github.com/amaylabs).
+Built by [Brobuiltathing](https://github.com/Brobuiltathing.
 
 ![HELIX banner](https://via.placeholder.com/1200x400/07070b/00e5cc?text=HELIX+v4)
 
